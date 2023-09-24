@@ -1,6 +1,6 @@
 {
 	"Name" : "Nessie Temp Fix",
 	"Description" : "Try to fix some of the game logic",
-	"Version": "1.3.8",
+	"Version": "1.3.9",
 	"LoadPriority": 2
 }
