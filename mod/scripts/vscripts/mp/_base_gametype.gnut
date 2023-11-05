@@ -960,7 +960,6 @@ function TrackDestroyTimeForReplay( entity attacker, table replayTracker )
 	OnThreadEnd(
 		function () : ( replayTracker, startTime )
 		{
-			//print( "killreplay attacker has been destroyed!" )
 			replayTracker.validTime = Time() - startTime
 		}
 	)

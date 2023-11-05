@@ -103,6 +103,9 @@ void function SetupPlayerEarnMeter( entity player )
 void function DelayedCatchUpEarnMeter( entity player )
 {
 	WaitFrame() // wait for earnmeter being reset
+	if ( !IsValid( player ) )
+		return
+
 	// for northstar, since players can re-connect very easily, we use catchedUpUIDs for storing
 	if ( GetGameState() >= eGameState.Playing )
 	{
@@ -168,6 +171,9 @@ void function EarnMeterMP_PlayerLifeThink( entity player )
 	float pilotRewardFrac = PlayerEarnMeter_GetRewardFrac( player )
 	int lastEarnMeterMode = PlayerEarnMeter_GetMode( player )
 
+	// every time player respawns, should reset their last gain time
+	// otherwise in most situation player can earn passive gain right on respawn...
+	file.playerLastPassiveGainTime[ player ] = Time()
 	// on respawn: If titan avaliable and we're nearly reach it, do a dialogue
 	TryTitanSoonAnnouncement( player )
 	// move here from sv_earn_meter.gnut
@@ -475,7 +481,10 @@ void function OverDriveClearOnDeath( entity player )
 	if ( earnValue > ownValue )
 	{
 		float diff = earnValue - ownValue
-		PlayerEarnMeter_AddEarnedFrac( player, -diff )
+		// better use PlayerEarnMeter_SoftReset()
+		// because with earnmeter multiplier, PlayerEarnMeter_AddEarnedFrac() can go down 0%
+		//PlayerEarnMeter_AddEarnedFrac( player, -diff )
+		PlayerEarnMeter_SoftReset( player )
 	}
 }
 
