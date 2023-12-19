@@ -745,13 +745,6 @@ bool function PlayerOrNPCKilled( entity ent, var damageInfo )
 		//For example: In script immediately above this we change the attacker to get the player behind the kill, e.g. owner of a pet titan, etc. Bunch of registered callbacks depends on this.
 		foreach( callbackFunc in svGlobal.onPlayerKilledCallbacks )
 			callbackFunc( ent, attacker, damageInfo )
-		if( attacker != ent && attacker.IsPlayer() && !attacker.IsTitan() )
-		{
-			#if BATTLECHATTER_ENABLED && MP
-				// killing pilot dialogues
-				TryPilotKillChatter( attacker )
-			#endif
-		}
 	}
 	else if ( ent.IsNPC() )
 	{
@@ -840,37 +833,6 @@ bool function PlayerOrNPCKilled( entity ent, var damageInfo )
 
 	return true
 }
-
-// killing pilot dialogues
-#if MP
-void function TryPilotKillChatter( entity attacker )
-{
-	if( GetGameState() >= eGameState.Playing ) // first check, don't play on intro or somewhere
-		thread TryPilotKillChatter_Threaded( attacker )
-}
-
-void function TryPilotKillChatter_Threaded( entity attacker )
-{
-	attacker.EndSignal( "OnDestroy" )
-	attacker.EndSignal( "OnDeath" )
-	wait RandomFloatRange( 0.3, 0.5 )
-	if( GetGameState() < eGameState.Playing ) // second check, don't play on intro or somewhere
-		return
-	PlayBattleChatterLine( attacker, "bc_fKilledEnemy" )
-	wait RandomFloatRange( 0.8, 1.1 )
-	if( GetGameState() < eGameState.Playing ) // third check, don't play on intro or somewhere
-		return
-    array<entity> nearbyFriendly = GetPlayerArrayOfTeam_Alive( attacker.GetTeam() )
-	if( nearbyFriendly.contains( attacker ) )
-		nearbyFriendly.removebyvalue( attacker )
-	if( nearbyFriendly.len() < 1 )
-        return
-    entity closestFriendly = GetClosest( nearbyFriendly, attacker.GetOrigin(), 500 )
-    //PlayBattleChatterLineIncludingPlayer( closestFriendly, "bc_fCongratsKill" )
-    if( IsValid( closestFriendly ) )
-        PlayBattleChatterLine( closestFriendly, "bc_fCongratsKill" )
-}
-#endif
 
 // used to calculate build time credit in special cases. Cloak Drones and Suicide Spectres use it for now.
 float function CalculateBuildTimeCredit( entity attacker, entity target, float damage, int health, int maxHealth, string playlistVarStr, float defaultCredit )
@@ -1117,35 +1079,7 @@ bool function GetPilotBotFlag()
 
 function DoRespawnPlayer( entity player, entity spawnPoint )
 {
-	#if MP // modified!!!!
-		if ( IsAlive( player ) )
-			return
-
-		// prevent a crash with going from titan => pilot on respawn
-		// normally this is handled by killreplay or intermission cam
-		// but we want to support modified death cam that allows player to completely skip kill replay
-		if ( player.GetPlayerSettings() != "spectator" )
-		{
-			if ( !player.IsTitan() )
-			{
-				// non-titan case, changing to spectator
-				string setFile = player.GetPlayerSettings()
-				PlayerClassChangeToSpectator( player )
-				player.SetPlayerSettings( setFile )
-			}
-			else // dying as titan, shouldn't reset player settings immedialely
-				PlayerClassChangeToSpectator( player )
-		}
-	#endif
-
 	player.p.lastSpawnPoint = spawnPoint
-
-	// HACK for modified death cam: 
-	// dissolving will delay 2s to hide player, but player may respawn earlier than 2s, making them being hide after respawn!
-	// have to manully clear dissolving effect for player before player.RespawnPlayer() is called
-	// this should be enough. also made a defensive fix in sh_death_package.gnut, EnsureDissolveEffectIsClearedForPlayer()
-	player.DissolveStop()
-
 	player.RespawnPlayer( spawnPoint ) //This will send "OnRespawned" signal, killing the thread if started from PostDeathThread
 }
 
@@ -1197,6 +1131,12 @@ function GivePlayerInfoOnSpawn( entity player )
 bool function ShouldStartSpawn( entity player )
 {
 	if ( Riff_FloorIsLava() )
+		return false
+
+	// modified: FFA don't have start spawns
+	// this should be handled by set "IgnoreStartSpawn" for all FFA gamemodes
+	// but northstar don't have this feature, adding a defensive fix
+	if ( IsFFAGame() )
 		return false
 
 	if ( Flag( "ForceStartSpawn" ) )

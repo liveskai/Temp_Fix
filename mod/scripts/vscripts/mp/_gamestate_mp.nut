@@ -148,8 +148,9 @@ void function PIN_GameStart()
 	
 	// In vanilla the level.nv.switchSides only inited when gamemode is actually using switch sides, or the function IsSwitchSidesBased() from _utility_shared.nut will always return a "true"!
 	//SetServerVar( "switchedSides", 0 ) // handled by SetSwitchSidesBased()
-	SetServerVar( "winningTeam", -1 )
-		
+	// In vanilla level.nv.winningTeam should be leave as null so GetWinningTeam() will return team-score-based result
+	//SetServerVar( "winningTeam", null ) // this should be null when not used...
+	
 	AddCallback_GameStateEnter( eGameState.WaitingForCustomStart, GameStateEnter_WaitingForCustomStart )
 	AddCallback_GameStateEnter( eGameState.WaitingForPlayers, GameStateEnter_WaitingForPlayers )
 	AddCallback_OnClientConnected( WaitingForPlayers_ClientConnected )
@@ -356,7 +357,7 @@ void function GameStateEnter_Playing_Threaded()
 			if ( file.timeoutWinnerDecisionFunc != null )
 				winningTeam = file.timeoutWinnerDecisionFunc()
 			else
-				winningTeam = GetWinningTeamWithFFASupport()
+				winningTeam = GetWinningTeamWithFFASupport() // networkvar "winningTeam" may not assigned at this point. we use team score for comparing
 
 			if ( winningTeam < TEAM_UNASSIGNED ) // no valid winner
 				winningTeam = TEAM_UNASSIGNED
@@ -403,7 +404,7 @@ void function GameStateEnter_WinnerDetermined()
 void function GameStateEnter_WinnerDetermined_Threaded()
 {
 	// do win announcement
-	int winningTeam = GetWinningTeamWithFFASupport()
+	int winningTeam = GetWinningTeam() // networkvar "winningTeam" should be assigned at this point, don't use GetWinningTeamWithFFASupport() because round based game score hasn't been updated yet
 
 	// match ending think
 	bool isMatchEnd = true
@@ -449,10 +450,6 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 	// add score for match end
 	// shared from _score.nut
 	ScoreEvent_MatchComplete( winningTeam, isMatchEnd )
-
-	bool killcamsWereEnabled = KillcamsEnabled()
-	if ( killcamsWereEnabled ) // dont want killcams to interrupt stuff
-		SetKillcamsEnabled( false )
 	
 	WaitFrame() // wait a frame so other scripts can setup killreplay stuff
 
@@ -516,6 +513,10 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 	//print( "doReplay: " + string( doReplay ) )
 	if ( doReplay )
 	{
+		bool killcamsWereEnabled = KillcamsEnabled()
+		if ( killcamsWereEnabled ) // dont want killcams to interrupt replay stuff. current replay stopped by RoundCleanUpPreSetUp()
+			SetKillcamsEnabled( false )
+
 		// pre setup for round end cleaning
 		RoundCleanUpPreSetUp()
 		
@@ -542,6 +543,9 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 		wait ROUND_CLEANUP_WAIT
 		CleanUpEntitiesForRoundEnd() // fade should be done by this point, so cleanup stuff now when people won't see
 
+		if ( killcamsWereEnabled ) // reset last
+			SetKillcamsEnabled( true )
+
 		wait ROUND_TRANSITION_DELAY
 	}
 	else if ( IsRoundBased() && !isMatchEnd ) // no replay roundBased, match not ending yet
@@ -563,9 +567,6 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 	{
 		wait ROUND_WINNING_KILL_REPLAY_LENGTH_OF_REPLAY // TEMP
 	}
-
-	if ( killcamsWereEnabled ) // reset last
-		SetKillcamsEnabled( true )
 	
 	if ( IsRoundBased() )
 	{
@@ -573,7 +574,7 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 		int roundsPlayed = expect int ( GetServerVar( "roundsPlayed" ) )
 		SetServerVar( "roundsPlayed", roundsPlayed + 1 )
 		
-		int winningTeam = GetWinningTeamWithFFASupport()
+		int winningTeam = GetWinningTeam() // networkvar "winningTeam" should be assigned at this point, use it
 		
 		int highestScore = GameRules_GetTeamScore( winningTeam )
 		int roundScoreLimit = GameMode_GetRoundScoreLimit( GAMETYPE )
@@ -607,6 +608,9 @@ void function GameStateEnter_WinnerDetermined_Threaded()
 		else
 			SetGameState( eGameState.Postmatch )
 	}
+
+	// winner determined event done. clear out winningTeam so GetWinningTeam() will use team score for comparing
+	SetServerVar( "winningTeam", null )
 }
 
 void function PlayerWatchesRoundWinningKillReplay( entity player, float extraDelay = 0.0 )
@@ -672,9 +676,6 @@ void function GameStateEnter_SwitchingSides_Threaded()
 	file.hasSwitchedSides = true
 	SetServerVar( "switchedSides", 1 )
 
-	bool killcamsWereEnabled = KillcamsEnabled()
-	if ( killcamsWereEnabled ) // dont want killcams to interrupt stuff
-		SetKillcamsEnabled( false )
 	bool respawnsWereEnabled = RespawnsEnabled()
 	if ( respawnsWereEnabled ) // don't want respawning to intterupt stuff
 		SetRespawnsEnabled( false )
@@ -775,6 +776,10 @@ void function GameStateEnter_SwitchingSides_Threaded()
 
 	if ( doReplay )
 	{
+		bool killcamsWereEnabled = KillcamsEnabled()
+		if ( killcamsWereEnabled ) // dont want killcams to interrupt replay stuff. current replay stopped by RoundCleanUpPreSetUp()
+			SetKillcamsEnabled( false )
+
 		// pre setup for round end cleaning
 		RoundCleanUpPreSetUp()
 		
@@ -797,6 +802,9 @@ void function GameStateEnter_SwitchingSides_Threaded()
 		// prepare to cleanup
 		wait SWITCH_SIDE_CLEANUP_WAIT
 		CleanUpEntitiesForRoundEnd() // fade should be done by this point, so cleanup stuff now when people won't see
+	
+		if ( killcamsWereEnabled ) // reset last
+			SetKillcamsEnabled( true )
 	}
 	else
 	{
@@ -841,10 +849,7 @@ void function GameStateEnter_SwitchingSides_Threaded()
 		}
 	}
 
-	// reset stuffs here
-	if ( killcamsWereEnabled )
-		SetKillcamsEnabled( true )
-	if ( respawnsWereEnabled )
+	if ( respawnsWereEnabled ) // reset last
 		SetRespawnsEnabled( true )
 
 	if ( file.usePickLoadoutScreen ) // here we just doing round transition, no need to enable pickloadout for intro stuffs, only for titan menu
@@ -1297,7 +1302,7 @@ void function MatchCleanUpPreSetUp()
 		// disable player's movements
 		player.FreezeControlsOnServer()
 		if ( IsAlive( player ) )
-			player.SetInvulnerable() // player no longer dies from here( unless they fall off cliff )
+			MatchEndCleanUpInvulnerableEntity( player ) // player no longer dies from here( unless they fall off cliff )
 		// shared from _base_gametype_mp.gnut, stop any kill replay playing
 		StopKillReplayForPlayer( player )
 		// respawn disallowed
@@ -1372,7 +1377,7 @@ void function CleanUpEntitiesForMatchEnd()
 		ClearTitanAvailable( player )
 		PROTO_CleanupTrackedProjectiles( player )
 		if ( IsAlive( player ) )
-			player.SetInvulnerable() // player no longer dies from here( unless they fall off cliff )
+			MatchEndCleanUpInvulnerableEntity( player ) // player no longer dies from here( unless they fall off cliff )
 	}
 
 	// freeze all npcs instead of killing them
@@ -1393,6 +1398,13 @@ void function CleanUpEntitiesForMatchEnd()
 		callback()
 }
 
+void function MatchEndCleanUpInvulnerableEntity( entity ent )
+{
+	ent.SetInvulnerable()
+	ent.SetNoTarget( true )
+	ent.SetNoTargetSmartAmmo( true )
+}
+
 void function FreezeAllNPCsForMatchEnd()
 {
 	while ( true )
@@ -1404,7 +1416,7 @@ void function FreezeAllNPCsForMatchEnd()
 			if ( !npc.IsFrozen() )
 				npc.Freeze()
 			if ( !npc.IsInvulnerable() )
-				npc.SetInvulnerable() // npc no longer dies from here
+				MatchEndCleanUpInvulnerableEntity( npc ) // npc no longer dies from here
 		}
 
 		WaitFrame()
@@ -1961,7 +1973,7 @@ void function PlayScoreEventFactionDialogue( string winningLarge, string losingL
 		if( IsRoundBased() )
 		{
 			mltScore = GameRules_GetTeamScore2( TEAM_MILITIA )
-			imcScore = GameRules_GetTeamScore2( TEAM_MILITIA )
+			imcScore = GameRules_GetTeamScore2( TEAM_IMC )
 		}
 
 		if( mltScore < imcScore )
@@ -1981,8 +1993,15 @@ void function PlayScoreEventFactionDialogue( string winningLarge, string losingL
 
 		int winningTeamScore = GameRules_GetTeamScore( winningTeam )
 		int losingTeamScore = GameRules_GetTeamScore( losingTeam )
-		if( scoreTied && GetServerVar( "winningTeam" ) <= TEAM_UNASSIGNED )
+		if( IsRoundBased() )
 		{
+			winningTeamScore = GameRules_GetTeamScore2( winningTeam )
+			losingTeamScore = GameRules_GetTeamScore2( losingTeam )
+		}
+
+		if( scoreTied && ( GetServerVar( "winningTeam" ) == null || GetServerVar( "winningTeam" ) <= TEAM_UNASSIGNED ) )
+		{
+			//print( "score tied!" )
 			if( tied != "" )
 			{
 				PlayFactionDialogueToTeam( "scoring_" + tied, TEAM_IMC )
