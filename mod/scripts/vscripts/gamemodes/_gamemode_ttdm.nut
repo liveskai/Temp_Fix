@@ -29,13 +29,13 @@ void function SetUpTTDMScoreEvents()
 	// pilot kill: 15% for titans
 	// titan kill: 0%
 	// titan assist: 0%
-	// execution: 0%
-	ScoreEvent_SetEarnMeterValues( "KillPilot", 0.0, 0.15, 1.0 )
+	// execution: 10%
+	ScoreEvent_SetEarnMeterValues( "KillPilot", 0.0, 0.15 )
 	ScoreEvent_SetEarnMeterValues( "KillTitan", 0.0, 0.0 )
 	ScoreEvent_SetEarnMeterValues( "KillAutoTitan", 0.0, 0.0 )
 	ScoreEvent_SetEarnMeterValues( "TitanKillTitan", 0.0, 0.0 )
 	ScoreEvent_SetEarnMeterValues( "TitanAssist", 0.0, 0.0 )
-	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.0 )
+	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.1 )
 }
 
 void function TTDMIntroSetup()
