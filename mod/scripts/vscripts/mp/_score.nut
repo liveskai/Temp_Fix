@@ -543,6 +543,7 @@ void function ScoreEvent_SetupEarnMeterValuesForMixedModes() // mixed modes in t
 	ScoreEvent_SetEarnMeterValues( "TitanKillTitan", 0.0, 0.0 )
 	// but titan assist do have earn values...
 	ScoreEvent_SetEarnMeterValues( "TitanAssist", 0.10, 0.10 )
+	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.1 )
 	// rodeo
 	ScoreEvent_SetEarnMeterValues( "PilotBatteryStolen", 0.0, 0.35, 0.0 )
 	ScoreEvent_SetEarnMeterValues( "PilotBatteryApplied", 0.0, 0.35, 0.0 )
