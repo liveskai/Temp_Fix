@@ -22,8 +22,13 @@ void function AiGameModes_Init()
 }
 void function BalanceTeam()
 {
-	if(GetPlayerArrayOfTeam(TEAM_IMC).len()<2 && GetPlayerArrayOfTeam(TEAM_MILITIA).len()<2)
-		return
+	switch(GetSpawnpointGamemodeOverride())
+	{
+		case FFA:
+		case COLISEUM:
+			return
+	}
+		
 	int team=TEAM_IMC
 	foreach(player in GetPlayerArray())
 	{
