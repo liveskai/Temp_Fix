@@ -8,7 +8,7 @@ global function AiGameModes_SpawnReaper
 global function AiGameModes_SpawnTitan
 
 global function GetValidIntroDropShipSpawn
-
+global BALANCE = false
 
 const INTRO_DROPSHIP_CUTOFF = 2000
 
@@ -19,7 +19,22 @@ struct
 
 void function AiGameModes_Init()
 {
-	
+	AddCallback_GameStateEnter( eGameState.Prematch, BalanceTeam )
+}
+void function BalanceTeam()
+{//开局打乱队伍
+	if(!BALANCE)
+		return
+		
+	int team=TEAM_IMC
+	foreach(player in GetPlayerArray())
+	{
+		SetTeam( player, team )
+		if(team==TEAM_IMC)
+			team=TEAM_MILITIA
+		else
+			team=TEAM_IMC
+	}
 }
 
 //------------------------------------------------------
