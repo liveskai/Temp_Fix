@@ -15,7 +15,7 @@ struct {
 void function GamemodePs_Init()
 {
 	Riff_ForceTitanAvailability( eTitanAvailability.Never )
-	BALANCE = true
+	
 	AddCallback_OnPlayerKilled( GiveScoreForPlayerKill )
 	ScoreEvent_SetupEarnMeterValuesForMixedModes()
 	SetUpPilotSkirmishScoreEvent() // northstar missing

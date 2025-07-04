@@ -140,7 +140,6 @@ struct
 
 void function GamemodeFW_Init()
 {
-	BALANCE = true
 	// _battery_port.gnut needs this
 	RegisterSignal( "BatteryActivate" )
 

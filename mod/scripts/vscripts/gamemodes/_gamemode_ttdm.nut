@@ -9,7 +9,7 @@ void function GamemodeTTDM_Init()
 	TrackTitanDamageInPlayerGameStat( PGS_ASSAULT_SCORE )
 	// ScoreEvent_SetupEarnMeterValuesForMixedModes()
 	SetLoadoutGracePeriodEnabled( false )
-	BALANCE = true
+	
 	ClassicMP_SetCustomIntro( TTDMIntroSetup, TTDMIntroLength )
 	ClassicMP_ForceDisableEpilogue( true )
 	SetTimeoutWinnerDecisionFunc( CheckScoreForDraw )

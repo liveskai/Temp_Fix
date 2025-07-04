@@ -3,7 +3,6 @@ global function RateSpawnpoints_Directional
 
 void function GamemodeTdm_Init()
 {
-	BALANCE = true
 	AddCallback_OnPlayerKilled( GiveScoreForPlayerKill )
 	ScoreEvent_SetupEarnMeterValuesForMixedModes()
 	SetTimeoutWinnerDecisionFunc( CheckScoreForDraw )
