@@ -358,7 +358,7 @@ void function ApplyWeaponAmpForDuration_Threaded( entity weapon, float duration 
 
 	if(weapon.GetWeaponPrimaryClipCountMax()>0)
 		weapon.SetWeaponPrimaryClipCount( weapon.GetWeaponPrimaryClipCountMax() )
-		
+	weapon.RemoveMod( "silencer" )
 	foreach ( mod in GetWeaponMods_Global( weapon.GetWeaponClassName() ) )
 	if( mod.find( "burn_mod" )==0 )
 		weapon.AddMod(mod)
@@ -380,16 +380,11 @@ void function ApplyWeaponAmpForDuration_Threaded( entity weapon, float duration 
 		}
 	)
 
-
 	if ( weapon.GetScriptFlags0() & WEAPONFLAG_AMPED )
 	{
 		weapon.SetScriptFlags0( weapon.GetScriptFlags0() & ~WEAPONFLAG_AMPED )
 		weapon.SetScriptTime0( 0.0 )
 	}
-
-
-	weapon.RemoveMod( "silencer" )
-
 
 	// needed to display amped weapon time left
 	weapon.SetScriptFlags0( weapon.GetScriptFlags0() | WEAPONFLAG_AMPED )

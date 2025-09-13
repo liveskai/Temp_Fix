@@ -121,90 +121,28 @@ void function OnPlayerConnected( entity player )
 // Used to handle both player and ai events
 void function HandleScoreEvent( entity victim, entity attacker, var damageInfo )
 {
-	// if victim is a non-titan npc that owned by players, don't add score
-	if ( !VictimIsValidForAITdmScore( victim ) )
-		return
-	
-	if ( !AttackerIsValidForAITdmScore( victim, attacker, damageInfo ) )
+	if(!attacker.IsPlayer()||victim==attacker)
 		return
 
-	int playerScore
-	string eventName
-	
-	// Handle AI, marvins aren't setup so we check for them to prevent crash
-	if ( victim.IsNPC() && victim.GetClassName() != "npc_marvin" )
+	int playerScore = 1
+	switch ( victim.GetClassName() )
 	{
-		switch ( victim.GetClassName() )
-		{
-			case "npc_soldier":
-			case "npc_spectre":
-			case "npc_stalker":
-				playerScore = 1
-				break
-			case "npc_super_spectre":
-				playerScore = 3
-				break
-			default:
-				playerScore = 0
-				break
-		}
-		
-		// Titan kills get handled bellow this
-		if ( eventName != "KillNPCTitan"  && eventName != "" )
-			playerScore = ScoreEvent_GetPointValue( GetScoreEvent( eventName ) )
+		case "npc_marvin":
+			return
+		case "npc_super_spectre":
+			playerScore = 3
+			break
+		case "player":
+			playerScore = 5
+			if(victim.IsTitan())
+				playerScore=15
+			break
+		case "npc_titan":
+			if (victim.GetBossPlayer()==attacker )
+				return
+			playerScore = 10
 	}
-	
-	if ( victim.IsPlayer() )
-		playerScore = 5
-	
-	// Player ejecting triggers this without the extra check
-	if ( victim.IsTitan() && victim.GetBossPlayer() != attacker )
-		playerScore += 10
-
 	AddAITdmPlayerTeamScore( attacker, playerScore )
-}
-
-bool function AttackerIsValidForAITdmScore( entity victim, entity attacker, var damageInfo )
-{
-	// Basic checks
-	if ( !IsValid( attacker ) )
-		return false
-	if ( victim == attacker || !( attacker.IsPlayer() || attacker.IsTitan() ) || GetGameState() != eGameState.Playing )
-		return false
-	
-	// Hacked spectre and pet titan filter
-	if ( victim.GetOwner() == attacker || victim.GetBossPlayer() == attacker )
-		return false
-	
-	// NPC titans without an owner player will not count towards any team's score
-	if ( attacker.IsNPC() && attacker.IsTitan() && !IsValid( GetPetTitanOwner( attacker ) ) )
-		return false
-
-	// all checks passed
-	return true
-}
-
-bool function VictimIsValidForAITdmScore( entity victim )
-{
-	// if victim is a non-titan npc that owned by players, don't add score
-	if ( victim.IsNPC() && !victim.IsTitan() )
-	{
-		entity bossPlayer = victim.GetBossPlayer()
-		entity owner = victim.GetOwner()
-		if ( IsValid( bossPlayer ) )
-		{
-			if ( bossPlayer.IsPlayer() )
-				return false
-		}
-		if ( IsValid( owner ) )
-		{
-			if ( owner.IsPlayer() )
-				return false
-		}
-	}
-
-	// all checks passed
-	return true
 }
 
 void function AddAITdmPlayerTeamScore( entity player, int score )
