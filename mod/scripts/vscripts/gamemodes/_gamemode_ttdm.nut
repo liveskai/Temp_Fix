@@ -26,13 +26,10 @@ void function GamemodeTTDM_Init()
 // northstar missing
 void function SetUpTTDMScoreEvents()
 {
-	// pilot kill: 15% for titans
-	// titan kill: 0%
-	// titan assist: 5%
-	// execution: 10%
 	ScoreEvent_SetEarnMeterValues( "KillPilot", 0.0, 0.15 )
 	ScoreEvent_SetEarnMeterValues( "TitanAssist", 0.0, 0.05 )
 	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.1 )
+	ScoreEvent_SetEarnMeterValues( "DoomTitan", 0.0, 0.1 )
 }
 
 void function TTDMIntroSetup()

@@ -533,7 +533,7 @@ void function ScoreEvent_SetupEarnMeterValuesForMixedModes() // mixed modes in t
 	ScoreEvent_SetEarnMeterValues( "EliminatePilot", 0.10, 0.05 )
 	ScoreEvent_SetEarnMeterValues( "PilotAssist", 0.03, 0.020001, 0.0 ) // if set to "0.03, 0.02", will display as "4%"
 	// titan kill
-	ScoreEvent_SetEarnMeterValues( "DoomTitan", 0.0, 0.0 )
+	ScoreEvent_SetEarnMeterValues( "DoomTitan", 0.1, 0.1 )
 	// don't know why auto titan kills appear to be no value in vanilla
 	// even when the titan have an owner player
 	ScoreEvent_SetEarnMeterValues( "KillTitan", 0.20, 0.10, 0.0 )
