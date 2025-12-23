@@ -7,7 +7,6 @@ void function GamemodeTTDM_Init()
 	Riff_ForceSetSpawnAsTitan( eSpawnAsTitan.Always )
 	Riff_ForceTitanExitEnabled( eTitanExitEnabled.Never )
 	TrackTitanDamageInPlayerGameStat( PGS_ASSAULT_SCORE )
-	// ScoreEvent_SetupEarnMeterValuesForMixedModes()
 	SetLoadoutGracePeriodEnabled( false )
 	
 	ClassicMP_SetCustomIntro( TTDMIntroSetup, TTDMIntroLength )
@@ -21,8 +20,18 @@ void function GamemodeTTDM_Init()
 
 	// tempfix specifics
 	SetShouldPlayDefaultMusic( true ) // play music when score or time reaches some point
+	AddCallback_OnClientConnected( ShieldDamageStat )//护甲计算伤害
 }
-
+void function ShieldDamageStat( entity player )
+{
+	AddEntityCallback_OnPostShieldDamage( player, OnPostShieldDamage )
+}
+void function OnPostShieldDamage( entity ent, var damageInfo, float actualShieldDamage )
+{
+	entity attacker = DamageInfo_GetAttacker( damageInfo )
+	if( attacker.IsPlayer() && attacker != ent )
+		attacker.AddToPlayerGameStat( PGS_ASSAULT_SCORE, actualShieldDamage )
+}
 // northstar missing
 void function SetUpTTDMScoreEvents()
 {
