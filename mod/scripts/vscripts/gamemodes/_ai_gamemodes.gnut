@@ -38,6 +38,15 @@ void function BalanceTeam()
 		else
 			team=TEAM_IMC
 	}
+	AddCallback_GameStateEnter( eGameState.Playing, OverLoad )
+}
+void function OverLoad()
+{
+	int i = GetCurrentPlaylistVarInt("max_players",0)/2
+	if(GetPlayerArrayOfTeam(TEAM_IMC).len()>i)
+		SetTeam(GetPlayerArrayOfTeam(TEAM_IMC).getrandom(),TEAM_MILITIA)
+	else if(GetPlayerArrayOfTeam(TEAM_MILITIA).len()>i)
+		SetTeam(GetPlayerArrayOfTeam(TEAM_MILITIA).getrandom(),TEAM_IMC)
 }
 
 //------------------------------------------------------

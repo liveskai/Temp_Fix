@@ -151,5 +151,8 @@ int function CheckScoreForDraw()
 void function OnWinnerDetermined()
 {
 	foreach(player in GetPlayerArray())
+	{
 		player.SetInvulnerable()
+		player.NotSolid()
+	}
 }
