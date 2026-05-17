@@ -21,7 +21,6 @@ void function GamemodeTTDM_Init()
 	// tempfix specifics
 	SetShouldPlayDefaultMusic( true ) // play music when score or time reaches some point
 	AddCallback_OnClientConnected( ShieldDamageStat )//护甲计算伤害
-	AddCallback_GameStateEnter( eGameState.WinnerDetermined, OnWinnerDetermined )
 }
 void function ShieldDamageStat( entity player )
 {
@@ -146,13 +145,4 @@ int function CheckScoreForDraw()
 		return TEAM_MILITIA
 
 	return TEAM_UNASSIGNED
-}
-
-void function OnWinnerDetermined()
-{
-	foreach(player in GetPlayerArray())
-	{
-		player.SetInvulnerable()
-		player.NotSolid()
-	}
 }

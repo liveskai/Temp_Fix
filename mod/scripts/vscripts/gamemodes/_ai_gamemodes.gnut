@@ -19,6 +19,7 @@ struct
 void function AiGameModes_Init()
 {
 	AddCallback_GameStateEnter( eGameState.Prematch, BalanceTeam )
+	AddCallback_GameStateEnter( eGameState.WinnerDetermined, OnWinnerDetermined )
 }
 void function BalanceTeam()
 {
@@ -40,6 +41,16 @@ void function BalanceTeam()
 	}
 	AddCallback_GameStateEnter( eGameState.Playing, OverLoad )
 }
+void function OnWinnerDetermined()
+{
+	level.disableOutOfBounds = true
+	foreach(trigger in GetEntArrayByClass_Expensive("trigger_hurt"))
+		trigger.Destroy()
+	if(!ClassicMP_ShouldRunEpilogue())
+		foreach(player in GetPlayerArray())
+			player.SetInvulnerable()
+}
+
 void function OverLoad()
 {
 	int i = GetCurrentPlaylistVarInt("max_players",0)/2
