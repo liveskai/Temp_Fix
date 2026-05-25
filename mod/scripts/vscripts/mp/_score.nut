@@ -213,6 +213,8 @@ void function ScoreEvent_PlayerKilled( entity victim, entity attacker, var damag
 	if ( victim.IsTitan() )
 		ScoreEvent_TitanKilled( victim, attacker, damageInfo )
 
+	ScoreEvent_PlayerAssist( victim, attacker, "PilotAssist" )
+	
 	if ( !attacker.IsPlayer() )
 		return
 
@@ -295,13 +297,6 @@ void function ScoreEvent_PlayerKilled( entity victim, entity attacker, var damag
 	}
 	
 	attacker.s.lastKillTime = Time()
-
-	// assist. was previously be in _base_gametype_mp.gnut, which is bad. vanilla won't add assist on npc killing a player
-	if ( !victim.IsTitan() ) // titan assist handled by ScoreEvent_TitanKilled()
-	{
-		// wrap into this function
-		ScoreEvent_PlayerAssist( victim, attacker, "PilotAssist" )
-	}
 }
 
 // this only gets called when titan's owner is player
@@ -317,6 +312,17 @@ void function ScoreEvent_TitanDoomed( entity titan, entity attacker, var damageI
 
 void function ScoreEvent_TitanKilled( entity victim, entity attacker, var damageInfo )
 {
+	// titan damage history stores in titanSoul, but if they killed by termination it's gonna transfer to victim themselves
+	bool killedByTermination = DamageInfo_GetDamageSourceIdentifier( damageInfo ) == eDamageSourceId.titan_execution
+	entity damageHistorySaver = killedByTermination ? victim : victim.GetTitanSoul()
+	if ( IsValid( damageHistorySaver ) )
+	{
+		// debug
+		//print( "damageHistorySaver valid! " + string( damageHistorySaver ) )
+		// wrap into this function
+		ScoreEvent_PlayerAssist( damageHistorySaver, attacker, "TitanAssist" )
+	}
+	
 	// will this handle npc titans with no owners well? i have literally no idea
 	// this won't, attacker needs to have a player owner or something to trigger score event
 	if ( !attacker.IsPlayer() )
@@ -383,17 +389,6 @@ void function ScoreEvent_TitanKilled( entity victim, entity attacker, var damage
 
 	if ( playTitanKilledDiag )
 		KilledPlayerTitanDialogue( attacker, victim )
-
-	// titan damage history stores in titanSoul, but if they killed by termination it's gonna transfer to victim themselves
-	bool killedByTermination = DamageInfo_GetDamageSourceIdentifier( damageInfo ) == eDamageSourceId.titan_execution
-	entity damageHistorySaver = killedByTermination ? victim : victim.GetTitanSoul()
-	if ( IsValid( damageHistorySaver ) )
-	{
-		// debug
-		//print( "damageHistorySaver valid! " + string( damageHistorySaver ) )
-		// wrap into this function
-		ScoreEvent_PlayerAssist( damageHistorySaver, attacker, "TitanAssist" )
-	}
 }
 
 // this can also handle npc killing another npc condition
