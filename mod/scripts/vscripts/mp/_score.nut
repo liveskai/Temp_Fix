@@ -302,12 +302,7 @@ void function ScoreEvent_PlayerKilled( entity victim, entity attacker, var damag
 // this only gets called when titan's owner is player
 void function ScoreEvent_TitanDoomed( entity titan, entity attacker, var damageInfo )
 {
-	// will this handle npc titans with no owners well? i have literally no idea
-	// these two shouldn't add eEventDisplayType.CENTER, override with eEventDisplayType.MEDAL
-	if ( titan.IsNPC() )
-		AddPlayerScore( attacker, "DoomAutoTitan", titan, eEventDisplayType.MEDAL )
-	else
-		AddPlayerScore( attacker, "DoomTitan", titan, eEventDisplayType.MEDAL )
+	AddPlayerScore( attacker, "DoomTitan", titan, eEventDisplayType.MEDAL )
 }
 
 void function ScoreEvent_TitanKilled( entity victim, entity attacker, var damageInfo )
