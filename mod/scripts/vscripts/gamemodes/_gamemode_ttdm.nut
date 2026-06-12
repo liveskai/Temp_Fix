@@ -38,7 +38,7 @@ void function SetUpTTDMScoreEvents()
 	ScoreEvent_SetEarnMeterValues( "KillPilot", 0.0, 0.15 )
 	ScoreEvent_SetEarnMeterValues( "TitanAssist", 0.0, 0.05 )
 	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.1 )
-	ScoreEvent_SetEarnMeterValues( "DoomTitan", 0.0, 0.1 )
+	ScoreEvent_SetEarnMeterValues( "DoomTitan", 0.0, 0.05 )
 }
 
 void function TTDMIntroSetup()
