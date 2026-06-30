@@ -322,7 +322,6 @@ void function ScoreEvent_TitanKilled( entity victim, entity attacker, var damage
 	// this won't, attacker needs to have a player owner or something to trigger score event
 	if ( !attacker.IsPlayer() )
 		return
-
 	// modified for npc pilot embarked titan
 #if NPC_TITAN_PILOT_PROTOTYPE
 	entity owner = victim.GetOwner()
