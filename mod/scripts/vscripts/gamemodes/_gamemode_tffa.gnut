@@ -1,5 +1,6 @@
 global function GamemodeTFFA_Init
 const float TFFAIntroLength = 15.0
+
 void function GamemodeTFFA_Init()
 {
 	SetSpawnpointGamemodeOverride( FFA )
@@ -13,17 +14,15 @@ void function GamemodeTFFA_Init()
 	SetUpTFFAScoreEvents()
 
 	ClassicMP_SetCustomIntro( TFFAIntroSetup, TFFAIntroLength )
-
-	AddCallback_OnPlayerKilled( AddTeamScoreForPlayerKilled )
 	AddCallback_OnClientConnected( OnClientConnected )
-	AddCallback_OnClientDisconnected( TakeTeamScore )
+	AddCallback_OnPlayerKilled( AddTeamScoreForPlayerKilled )
+	SetConVarInt( "sv_alltalk", 1 )
 }
 
 // northstar missing
 void function SetUpTFFAScoreEvents()
 {
 	ScoreEvent_SetEarnMeterValues( "KillPilot", 0.0, 0.15 )
-	ScoreEvent_SetEarnMeterValues( "TitanAssist", 0.0, 0.05 )
 	ScoreEvent_SetEarnMeterValues( "Execution", 0.0, 0.1 )
 }
 
@@ -39,7 +38,6 @@ void function TFFAIntroStart()
 {
 	thread TFFAIntroStartThreaded()
 }
-
 void function TFFAIntroStartThreaded()
 {
 	ClassicMP_OnIntroStarted()
@@ -59,10 +57,6 @@ void function TFFAIntroStartThreaded()
 
 void function TFFAIntroShowIntermissionCam( entity player )
 {
-	// vanilla behavior
-	//if ( GetGameState() != eGameState.Prematch )
-	//	return
-	
 	thread PlayerWatchesTFFAIntroIntermissionCam( player )
 }
 
@@ -98,23 +92,19 @@ void function PlayerWatchesTFFAIntroIntermissionCam( entity player )
 void function AddTeamScoreForPlayerKilled( entity victim, entity attacker, var damageInfo )
 {
 	if (attacker.IsPlayer() )
-		GameRules_SetTeamScore(attacker.GetTeam(),attacker.GetPlayerGameStat(PGS_TITAN_KILLS)+1)
+		AddTeamScore( attacker.GetTeam(), 1 )
 }
 
 
 void function OnClientConnected( entity player )
 {
+	AddEntityCallback_OnPostShieldDamage( player, OnPostShieldDamage )
 	if ( GetGameState() == eGameState.Prematch )
 		TFFAIntroShowIntermissionCam( player )
-	AddEntityCallback_OnPostShieldDamage( player, OnPostShieldDamage )
 }
 void function OnPostShieldDamage( entity ent, var damageInfo, float actualShieldDamage )
 {
 	entity attacker = DamageInfo_GetAttacker( damageInfo )
 	if( attacker.IsPlayer() && attacker != ent )
 		attacker.AddToPlayerGameStat( PGS_ASSAULT_SCORE, actualShieldDamage )
-}
-void function TakeTeamScore( entity player )
-{
-	GameRules_SetTeamScore(player.GetTeam(),0)
 }
